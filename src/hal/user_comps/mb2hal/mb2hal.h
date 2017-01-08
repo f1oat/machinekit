@@ -15,7 +15,7 @@
 #include "inifile.h"
 #include "emcglb.h"
 
-#include <modbus.h>
+#include <modbus/modbus.h>
 
 #define MB2HAL_MAX_LINKS            32
 #define MB2HAL_MAX_DEVICE_LENGTH    32
@@ -29,6 +29,7 @@
 #define MB2HAL_MAX_FNCT05_ELEMENTS 100
 #define MB2HAL_MAX_FNCT15_ELEMENTS 100
 #define MB2HAL_MAX_FNCT16_ELEMENTS 100
+#define MB2HAL_MAX_HAL_MAP_PIN     100
 
 #ifdef MODULE_VERBOSE
 MODULE_VERBOSE(emc2, "component:mb2hal:Userspace HAL component to communicate with one or more Modbus devices");
@@ -56,6 +57,17 @@ typedef enum { retOK, retOKwithWarning, retERR
 #define ERR(debug, fmt, args...) if(debug >= debugERR) {fprintf(stderr, "%s %s ERR: "fmt"\n", gbl.hal_mod_name, fnct_name, ## args);}
 #define OK(debug, fmt, args...) if(debug >= debugOK) {fprintf(stdout, "%s %s OK: "fmt"\n", gbl.hal_mod_name, fnct_name, ## args);}
 #define DBG(debug, fmt, args...) if(debug >= debugDEBUG) {fprintf(stdout, "%s %s DEBUG: "fmt"\n", gbl.hal_mod_name, fnct_name, ## args);}
+
+// Structure used to store enhanced pin mapping configuration
+
+typedef struct {
+	char *name;				// The name of the HAL pin
+	int addr;
+	int width;				// Number of successive Modbus registers associated to this pin (useful to make 32bits value from 2 x 16bits registers
+	hal_type_t type;	// HAL_BIT, HAL_FLOAT, HAL_S32, HAL_U32
+	hal_float_t scale;
+	hal_float_t offset;
+} hal_map_pin_t;
 
 //Modbus transaction structure (mb_tx_t)
 //Store each transaction defined in INI config file
@@ -101,6 +113,9 @@ typedef struct {
     //hal_float_t *offset; //not yet implemented
     hal_bit_t **bit;
     hal_u32_t **num_errors;     //num of acummulated errors (0=last tx OK)
+    int nb_hal_map_pin;
+    hal_map_pin_t hal_map_pin[MB2HAL_MAX_HAL_MAP_PIN];
+    hal_data_u **pin_value;
 } mb_tx_t;
 
 //Modbus link structure (mb_link_t)

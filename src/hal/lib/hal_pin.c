@@ -241,6 +241,7 @@ void unlink_pin(hal_pin_t * pin)
 	    hal_print_msg(RTAPI_MSG_ERR,
 			  "HAL: BUG: pin '%s' has invalid type %d !!\n",
 			  pin->name, pin->type);
+	    break;
 	}
 
 	/* update the signal's reader/writer counts */

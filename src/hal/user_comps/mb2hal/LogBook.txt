@@ -24,6 +24,26 @@
  * USA.
  */
 
+2017-01-08
+  # Added new keyword HAL_MAP_PIN
+  # Syntax is HAL_MAP_PIN = name, addr, format, scale, offset
+  #  name: name of the pin
+  #  addr: Modbus address associated to this pin (0x format can be used for hexa)
+  #  format:
+  #     bit: bit pin,   mapped to one 1 bit modbus register (coil, discrete input)
+  #	    f16: float pin, mapped to one 16 bit modbus register
+  #     s16: s32 pin,   mapped to one 16 bit modbus register
+  #     u16: u32 pin,   mapped to one 16 bit modbus register
+  #	    f32: float pin, mapped to two 16 bit modbus register (MSB first)
+  #     s32: s32 pin,   mapped to two 16 bit modbus register (MSB first)
+  #     u32: u32 pin,   mapped to two 16 bit modbus register (MSB first)
+  #
+  #  scale: optional floating point scale value
+  #  offset: optional floating point offset value
+  #  The scale/offset formula used is:
+  #    pin = modbus_register * scale + offset when reading from Modbus
+  #    modbus_register = pin * scale + offset when writing to Modbus
+  
 2012-11-12:
   # Arduino example added.
     - Tested with Arduino Mega 2560 R3 using Modbusino over USB at 115200 bps.

@@ -659,6 +659,14 @@ iniFind(FILE *fp, const char *tag, const char *section)
     return(f.Find(tag, section));
 }
 
+extern "C" const char *
+iniFindnum(FILE *fp, const char *tag, const char *section, const int num)
+{
+    IniFile                     f(false, fp);
+
+    return(f.Find(tag, section, num));
+}
+
 extern "C" const int
 iniFindInt(FILE *fp, const char *tag, const char *section, int *result)
 {

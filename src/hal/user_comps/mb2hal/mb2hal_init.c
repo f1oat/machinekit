@@ -115,6 +115,58 @@ retCode parse_common_section()
     return retOK;
 }
 
+// HAL_MAP_PIN config syntax
+// HAL_MAP_PIN=name, address, type, [width, scale, offset]
+// type = bit, s32, u32, float
+
+retCode parse_hal_map_pin(mb_tx_t *this_mb_tx, const char *config)
+{
+	char *fnct_name = "parse_hal_map_pin";
+	char *c = strdup(config);
+	const char delims[] = " ,";
+	hal_map_pin_t *m;
+
+	if (!this_mb_tx->nb_hal_map_pin == MB2HAL_MAX_HAL_MAP_PIN) {
+		ERR(gbl.init_dbg, "out of memory");
+		return retERR;
+	}
+
+	char *name = strtok(c, delims);
+	char *addr = strtok(NULL, delims);
+	char *type = strtok(NULL, delims);
+	char *scale = strtok(NULL, delims);
+	char *offset = strtok(NULL, delims);
+
+	if (!name || !addr || !type) {
+		ERR(gbl.init_dbg, "HAL_MAP_PIN syntax error");
+		return retERR;
+	}
+
+	int index = this_mb_tx->nb_hal_map_pin++;
+
+	m = this_mb_tx->hal_map_pin + index;
+	m->name = strdup(name);
+	m->addr = strtol(addr, NULL, 0);
+	printf("addr=%d\n", m->addr);
+
+	if (!strcasecmp(type, "bit")) 			{ m->type = HAL_BIT;   m->width = 1; }
+	else if (!strcasecmp(type, "s16")) 		{ m->type = HAL_S32;   m->width = 1; }
+	else if (!strcasecmp(type, "u16")) 		{ m->type = HAL_U32;   m->width = 1; }
+	else if (!strcasecmp(type, "f16")) 	    { m->type = HAL_FLOAT; m->width = 1; }
+	else if (!strcasecmp(type, "s32")) 		{ m->type = HAL_S32;   m->width = 2; }
+	else if (!strcasecmp(type, "u32")) 		{ m->type = HAL_U32;   m->width = 2; }
+	else if (!strcasecmp(type, "f32")) 		{ m->type = HAL_FLOAT; m->width = 2; }
+	else {
+		ERR(gbl.init_dbg, "HAL_MAP_PIN unknown type %s", type);
+		return retERR;
+	}
+
+	m->scale = scale ? atof(scale) : 1;
+	m->offset = offset ? atof(offset) : 0;
+
+	free(c);
+	return retOK;
+}
 
 retCode parse_transaction_section(const int mb_tx_num)
 {
@@ -207,27 +259,33 @@ retCode parse_transaction_section(const int mb_tx_num)
     }
     DBG(gbl.init_dbg, "[%s] [%s] [%d]", section, tag, this_mb_tx->mb_tx_slave_id);
 
-    tag = "FIRST_ELEMENT"; //required
-    if (iniFindInt(gbl.ini_file_ptr, tag, section, &this_mb_tx->mb_tx_1st_addr) != 0) {
-        ERR(gbl.init_dbg, "required [%s] [%s] not found", section, tag);
+    tag = "FIRST_ELEMENT"; //required if HAL_MAP_PIN not used
+    if (!iniFindInt(gbl.ini_file_ptr, tag, section, &this_mb_tx->mb_tx_1st_addr)) {
+        if (this_mb_tx->mb_tx_1st_addr < 0) {
+            ERR(gbl.init_dbg, "[%s] [%s] [%d] out of range", section, tag, this_mb_tx->mb_tx_1st_addr);
+            return retERR;
+        }
+        DBG(gbl.init_dbg, "[%s] [%s] [%d]", section, tag, this_mb_tx->mb_tx_1st_addr);
+    }
+    else if (!iniFindnum(gbl.ini_file_ptr, "HAL_MAP_PIN", section, 1)) {
+        ERR(gbl.init_dbg, "required [%s] [%s or HAL_MAP_PIN] not found", section, tag);
         return retERR;
     }
-    if (this_mb_tx->mb_tx_1st_addr < 0) {
-        ERR(gbl.init_dbg, "[%s] [%s] [%d] out of range", section, tag, this_mb_tx->mb_tx_1st_addr);
-        return retERR;
-    }
-    DBG(gbl.init_dbg, "[%s] [%s] [%d]", section, tag, this_mb_tx->mb_tx_1st_addr);
 
-    tag = "NELEMENTS";  //required
-    if (iniFindInt(gbl.ini_file_ptr, tag, section, &this_mb_tx->mb_tx_nelem) != 0) {
-        ERR(gbl.init_dbg, "required [%s] [%s] not found", section, tag);
+    tag = "NELEMENTS";  //required if HAL_MAP_PIN not used
+    if (!iniFindInt(gbl.ini_file_ptr, tag, section, &this_mb_tx->mb_tx_nelem)) {
+        if (this_mb_tx->mb_tx_nelem < 1) {
+            ERR(gbl.init_dbg, "[%s] [%s] [%d] out of range", section, tag, this_mb_tx->mb_tx_nelem);
+            return retERR;
+        }
+        DBG(gbl.init_dbg, "[%s] [%s] [%d]", section, tag, this_mb_tx->mb_tx_nelem);
+
+
+    }
+    else if (!iniFindnum(gbl.ini_file_ptr, "HAL_MAP_PIN", section, 1)) {
+        ERR(gbl.init_dbg, "required [%s] [%s or HAL_MAP_PIN] not found", section, tag);
         return retERR;
     }
-    if (this_mb_tx->mb_tx_nelem < 1) {
-        ERR(gbl.init_dbg, "[%s] [%s] [%d] out of range", section, tag, this_mb_tx->mb_tx_nelem);
-        return retERR;
-    }
-    DBG(gbl.init_dbg, "[%s] [%s] [%d]", section, tag, this_mb_tx->mb_tx_nelem);
 
     tag = "MAX_UPDATE_RATE"; //optional
     this_mb_tx->cfg_update_rate = 0; //default: 0=infinit
@@ -304,6 +362,32 @@ retCode parse_transaction_section(const int mb_tx_num)
         sprintf(this_mb_tx->hal_tx_name, "%02d", mb_tx_num);
     }
     DBG(gbl.init_dbg, "[%s] [%s] [%s]", section, tag, this_mb_tx->hal_tx_name);
+
+    // Manage optional HAL_MAP_PIN records
+
+    int num=1;
+    do {
+    	tmpstr = iniFindnum(gbl.ini_file_ptr, "HAL_MAP_PIN", section, num++);
+    	if (tmpstr) {
+    		printf("%s\n", tmpstr);
+    		int rc = parse_hal_map_pin(this_mb_tx, tmpstr);
+    		if (rc != retOK) return rc;
+    	}
+
+    } while (tmpstr);
+
+    // If we are using HAL_MAP_PIN, then FIRST_ELEMENT and NELEMENTS are automatically computed
+
+    if (this_mb_tx->nb_hal_map_pin > 0) {
+    	int min_addr = this_mb_tx->hal_map_pin[0].addr;
+    	int max_addr = min_addr;
+    	for (int i=1; i<this_mb_tx->nb_hal_map_pin; i++) {
+    		min_addr = MIN(min_addr, this_mb_tx->hal_map_pin[i].addr);
+    		max_addr = MAX(max_addr, this_mb_tx->hal_map_pin[i].addr + this_mb_tx->hal_map_pin[i].width -1);
+    	}
+    	this_mb_tx->mb_tx_1st_addr = min_addr;
+    	this_mb_tx->mb_tx_nelem = max_addr - min_addr + 1;
+    }
 
     /*
         str = iniFind(gbl.ini_file_ptr, "PINNAME", mb_tx_name);
