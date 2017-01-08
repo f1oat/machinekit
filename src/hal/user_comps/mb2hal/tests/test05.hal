@@ -1,0 +1,12 @@
+loadusr -W mb2hal config=test05.ini
+
+#net loop0 mb2hal.rd_di.toto-00 => mb2hal.wr_mult_coils.toto-00
+#net loop1 mb2hal.rd_di.toto-01 => mb2hal.wr_mult_coils.toto-01
+
+#net loop2 mb2hal.rd_hold_reg.pin-f16 => mb2hal.wr_mult_reg.pin-f16
+#net loop3 mb2hal.rd_hold_reg.pin-s16 => mb2hal.wr_mult_reg.pin-s16
+#net loop4 mb2hal.rd_hold_reg.pin-u16 => mb2hal.wr_mult_reg.pin-u16
+
+#net loop5 mb2hal.rd_hold_reg.pin-f32 => mb2hal.wr_mult_reg.pin-f32	
+#net loop6 mb2hal.rd_hold_reg.pin-s32 => mb2hal.wr_mult_reg.pin-s32
+#net loop7 mb2hal.rd_hold_reg.pin-u32 => mb2hal.wr_mult_reg.pin-u32
