@@ -380,7 +380,7 @@ retCode parse_transaction_section(const int mb_tx_num)
 
     if (this_mb_tx->nb_hal_map_pin > 0) {
     	int min_addr = this_mb_tx->hal_map_pin[0].addr;
-    	int max_addr = min_addr;
+    	int max_addr = min_addr + this_mb_tx->hal_map_pin[0].width -1;
     	for (int i=1; i<this_mb_tx->nb_hal_map_pin; i++) {
     		min_addr = MIN(min_addr, this_mb_tx->hal_map_pin[i].addr);
     		max_addr = MAX(max_addr, this_mb_tx->hal_map_pin[i].addr + this_mb_tx->hal_map_pin[i].width -1);
