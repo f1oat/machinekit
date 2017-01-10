@@ -183,6 +183,8 @@ void *link_loop_and_logic(void *thrd_link_num)
                 this_mb_tx_num, this_mb_tx->mb_link_num, this_mb_link_num, modbus_get_socket(this_mb_link->modbus),
                 this_mb_tx->protocol_debug);
 
+            (**this_mb_tx->cumul_transactions)++;
+
             switch (this_mb_tx->mb_tx_fnct) {
             case mbtx_02_READ_DISCRETE_INPUTS:
                 ret = fnct_02_read_discrete_inputs(this_mb_tx, this_mb_link);
@@ -211,13 +213,17 @@ void *link_loop_and_logic(void *thrd_link_num)
             }
 
             if (ret != retOK && modbus_get_socket(this_mb_link->modbus) < 0) { //link failure
-                (*this_mb_tx->num_errors)++;
+                (**this_mb_tx->num_errors)++;
+                (**this_mb_tx->cumul_errors)++;
+                **this_mb_tx->modbus_ok = 0;
                 ERR(this_mb_tx->cfg_debug, "mb_tx_num[%d] mb_links[%d] thread[%d] fd[%d] link failure, going to close link",
                     this_mb_tx_num, this_mb_tx->mb_link_num, this_mb_link_num, modbus_get_socket(this_mb_link->modbus));
                 modbus_close(this_mb_link->modbus);
             }
             else if (ret != retOK) {  //transaction failure but link OK
                 (**this_mb_tx->num_errors)++;
+                (**this_mb_tx->cumul_errors)++;
+                **this_mb_tx->modbus_ok = 0;
                 ERR(this_mb_tx->cfg_debug, "mb_tx_num[%d] mb_links[%d] thread[%d] fd[%d] transaction failure, num_errors[%d]",
                     this_mb_tx_num, this_mb_tx->mb_link_num, this_mb_link_num, modbus_get_socket(this_mb_link->modbus), **this_mb_tx->num_errors);
             }
@@ -227,6 +233,7 @@ void *link_loop_and_logic(void *thrd_link_num)
                    1.0/(get_time()-this_mb_tx->last_time_ok));
                 this_mb_tx->last_time_ok = get_time();
                 (**this_mb_tx->num_errors) = 0;
+                **this_mb_tx->modbus_ok = 1;
             }
 
             //set the next (waiting) time for update rate

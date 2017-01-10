@@ -16,6 +16,22 @@ retCode create_HAL_pins()
     return retOK;
 }
 
+#define CREATE_PIN(C, T, F)\
+mb_tx->C = hal_malloc(sizeof(T *));\
+if (mb_tx->C == NULL) {\
+    ERR(gbl.init_dbg, "[%d] [%s] NULL hal_malloc num_errors",\
+        mb_tx->mb_tx_fnct, mb_tx->mb_tx_fnct_name);\
+    return retERR;\
+}\
+memset(mb_tx->C, 0, sizeof(T *));\
+snprintf(hal_pin_name, HAL_NAME_LEN, "%s.%s.%s", gbl.hal_mod_name, mb_tx->hal_tx_name, #C);\
+if (0 != F(HAL_OUT, mb_tx->C, gbl.hal_mod_id, "%s", hal_pin_name)) {\
+    ERR(gbl.init_dbg, "[%d] [%s] [%s] " #F " pin failed", mb_tx->mb_tx_fnct, mb_tx->mb_tx_fnct_name, hal_pin_name);\
+    return retERR;\
+}\
+**(mb_tx->num_errors) = 0;\
+DBG(gbl.init_dbg, "mb_tx_num [%d] pin_name [%s]", mb_tx->mb_tx_num, hal_pin_name);
+
 retCode create_each_mb_tx_hal_pins(mb_tx_t *mb_tx)
 {
     char *fnct_name = "create_each_mb_tx_hal_pins";
@@ -42,6 +58,11 @@ retCode create_each_mb_tx_hal_pins(mb_tx_t *mb_tx)
     }
     **(mb_tx->num_errors) = 0;
     DBG(gbl.init_dbg, "mb_tx_num [%d] pin_name [%s]", mb_tx->mb_tx_num, hal_pin_name);
+
+    // modbus_ok hal pin
+    CREATE_PIN(modbus_ok, hal_bit_t, hal_pin_bit_newf);
+    CREATE_PIN(cumul_errors, hal_s32_t, hal_pin_s32_newf);
+    CREATE_PIN(cumul_transactions, hal_s32_t, hal_pin_s32_newf);
 
     if (!mb_tx->nb_hal_map_pin) {	// Old fashioned pin management
 		switch (mb_tx->mb_tx_fnct) {

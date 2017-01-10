@@ -113,6 +113,9 @@ typedef struct {
     //hal_float_t *offset; //not yet implemented
     hal_bit_t **bit;
     hal_u32_t **num_errors;     //num of acummulated errors (0=last tx OK)
+    hal_s32_t **cumul_errors;		//num of errors, never reset
+    hal_s32_t **cumul_transactions;//num of transactions
+    hal_bit_t **modbus_ok;		//true if modbus communication is ok
     int nb_hal_map_pin;
     hal_map_pin_t hal_map_pin[MB2HAL_MAX_HAL_MAP_PIN];
     hal_data_u **pin_value;
