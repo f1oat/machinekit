@@ -68,6 +68,7 @@ slave.add_block('in', cst.DISCRETE_INPUTS, 100, 32)
 slave.add_block('coils', cst.COILS, 0, 32)
 slave.add_block('analog', cst.ANALOG_INPUTS, 0, 32)
 slave.add_block('hreg', cst.HOLDING_REGISTERS, 0, 32)
+slave.add_block('single-coil', cst.COILS, 64, 1)
 
 slave.set_values('in', 100, ( 1, 0) )
 
@@ -150,23 +151,53 @@ err |= check_hal_pin("mb2hal.in.pin-1", 0)
 err |= check_hal_pin("mb2hal.in2.00", 1)
 err |= check_hal_pin("mb2hal.in2.01", 0)
 
-# Check MODBUS write coils
+# Check MODBUS write multiple coils
 
 write_hal_pin("mb2hal.coils.pin-0", 0)
 write_hal_pin("mb2hal.coils.pin-1", 1)
+write_hal_pin("mb2hal.coils.pin-2", 0)
+write_hal_pin("mb2hal.coils.pin-3", 0)
 write_hal_pin("mb2hal.coils2.00", 0)
 write_hal_pin("mb2hal.coils2.01", 1)
 time.sleep(0.2)
-err |= check_reg("mb2hal.coils.pin-0", slave.get_values('coils', 0, 2), ( 0, 1))
+err |= check_reg("mb2hal.coils.pin-0", slave.get_values('coils', 0, 4), ( 0, 1, 0, 0 ))
 err |= check_reg("mb2hal.coils.coisl2.00", slave.get_values('coils', 16, 2), ( 0, 1))
 
 write_hal_pin("mb2hal.coils.pin-0", 1)
 write_hal_pin("mb2hal.coils.pin-1", 0)
+write_hal_pin("mb2hal.coils.pin-2", 0)
+write_hal_pin("mb2hal.coils.pin-3", 0)
 write_hal_pin("mb2hal.coils2.00", 1)
 write_hal_pin("mb2hal.coils2.01", 0)
 time.sleep(0.2)
-err |= check_reg("mb2hal.coils.pin-0", slave.get_values('coils', 0, 2), ( 1, 0))
+err |= check_reg("mb2hal.coils.pin-0", slave.get_values('coils', 0, 4), ( 1, 0, 0, 0 ))
 err |= check_reg("mb2hal.coils.coisl2.00", slave.get_values('coils', 16, 2), ( 1, 0))
+
+write_hal_pin("mb2hal.coils.pin-0", 0)
+write_hal_pin("mb2hal.coils.pin-1", 0)
+write_hal_pin("mb2hal.coils.pin-2", 1)
+write_hal_pin("mb2hal.coils.pin-3", 0)
+time.sleep(0.2)
+err |= check_reg("mb2hal.coils.pin-0", slave.get_values('coils', 0, 4), ( 0, 0, 1, 0 ))
+
+write_hal_pin("mb2hal.coils.pin-0", 0)
+write_hal_pin("mb2hal.coils.pin-1", 0)
+write_hal_pin("mb2hal.coils.pin-2", 0)
+write_hal_pin("mb2hal.coils.pin-3", 1)
+time.sleep(0.2)
+err |= check_reg("mb2hal.coils.pin-0", slave.get_values('coils', 0, 4), ( 0, 0, 0, 1 ))
+
+# Check MODBUS write single coil
+
+write_hal_pin("mb2hal.single-coil.pin-0", 0)
+time.sleep(0.2)
+err |= check_reg("mb2hal.single-coil.pin-0", slave.get_values('single-coil', 64, 1), ( 0, ))
+
+write_hal_pin("mb2hal.single-coil.pin-0", 1)
+time.sleep(0.2)
+err |= check_reg("mb2hal.single-coil.pin-0", slave.get_values('single-coil', 64, 1), ( 1, ))
+
+# End of test
 
 os.system("halcmd show pin")
 halrun.stdin.write("quit\n")

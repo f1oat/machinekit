@@ -45,6 +45,7 @@ typedef enum { mbtxERR,
                mbtx_02_READ_DISCRETE_INPUTS,
                mbtx_03_READ_HOLDING_REGISTERS,
                mbtx_04_READ_INPUT_REGISTERS,
+			   mbtx_05_WRITE_SINGLE_COIL,
                mbtx_15_WRITE_MULTIPLE_COILS,
                mbtx_16_WRITE_MULTIPLE_REGISTERS,
                mbtxMAX
