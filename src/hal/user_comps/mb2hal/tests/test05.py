@@ -34,7 +34,8 @@ def write_hal_pin(name, value):
         
 def check_hal_pin(name, awaited):
     v = read_hal_pin(name)
-    rc = abs(v - awaited) > 1.0e-6
+    if v: rc = abs((v - awaited)/v) > 1e-3
+    else: rc = abs(v - awaited) > 1.0e-6
     if rc: status = "Error"
     else: status = "OK"
     print status, "pin", name,  v, awaited
@@ -98,9 +99,10 @@ slave.set_values('analog', 2, map16(u16, scale, offset) );
 f32 = -1e7
 s32 = int(-1e7)
 u32 = int(4e8)
-slave.set_values('analog', 4, map32(f32, scale, offset) );
-slave.set_values('analog', 6, map32(s32, scale, offset) );
-slave.set_values('analog', 8, map32(u32, scale, offset) );
+slave.set_values('analog',  4, map32(f32, scale, offset) );
+slave.set_values('analog',  6, map32(s32, scale, offset) );
+slave.set_values('analog',  8, map32(u32, scale, offset) );
+slave.set_values('analog', 10, map32(300, 0.059, 0) );
 
 slave.set_values('analog', 16, 4242 );
 
@@ -112,6 +114,7 @@ err |= check_hal_pin("mb2hal.analog.pin-2", u16)
 err |= check_hal_pin("mb2hal.analog.pin-4", f32)
 err |= check_hal_pin("mb2hal.analog.pin-6", s32)
 err |= check_hal_pin("mb2hal.analog.pin-8", u32)
+err |= check_hal_pin("mb2hal.analog.pin-10", 300)
 err |= check_hal_pin("mb2hal.analog2.00", 4242)
 
 # Check MODBUS write holding registers
