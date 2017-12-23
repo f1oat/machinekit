@@ -47,11 +47,10 @@
 #include <inifile.h>
 #include <syslog_async.h>
 
-#include "halitem.h"
 #include "mk-service.hh"
 #include "mk-zeroconf.hh"
 
-#include <machinetalk/protobuf/message.pb.h>
+#include <machinetalk/build/machinetalk/protobuf/message.pb.h>
 namespace gpb = google::protobuf;
 
 // announced protocol versions
@@ -100,7 +99,7 @@ typedef std::unordered_map<std::string, rcomp_t *> compmap_t;
 typedef compmap_t::iterator compmap_iterator;
 
 // HAL items indexed by handle
-typedef std::unordered_map<int, halitem_t *> itemmap_t;
+typedef std::unordered_map<int, hal_object_ptr> itemmap_t;
 typedef itemmap_t::iterator itemmap_iterator;
 
 #define NSVCS  3
@@ -157,18 +156,18 @@ typedef struct htself {
 int scan_groups(htself_t *self);
 int release_groups(htself_t *self);
 int handle_group_timer(zloop_t *loop, int timer_id, void *arg);
-int handle_group_input(zloop_t *loop, zmq_pollitem_t *poller, void *arg);
+int handle_group_input(zloop_t *loop, zsock_t *socket, void *arg);
 int ping_groups(htself_t *self);
 
 // haltalk_rcomp.cc:
 int scan_comps(htself_t *self);
 int release_comps(htself_t *self);
-int handle_rcomp_input(zloop_t *loop, zmq_pollitem_t *poller, void *arg);
+int handle_rcomp_input(zloop_t *loop, zsock_t *socket, void *arg);
 int handle_rcomp_timer(zloop_t *loop, int timer_id, void *arg);
 int ping_comps(htself_t *self);
 
 // haltalk_command.cc:
-int handle_command_input(zloop_t *loop, zmq_pollitem_t *poller, void *arg);
+int handle_command_input(zloop_t *loop, zsock_t *socket, void *arg);
 
 // haltalk_introspect.cc:
 int process_describe(htself_t *self, zmsg_t *from,  void *socket);

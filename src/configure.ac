@@ -541,9 +541,15 @@ AC_ARG_WITH(platform-pc,
     ],
     [
         case $host_cpu in
-	    (i?86 | x86_64)
-	        TARGET_PLATFORM_PC=unk
+	    (x86_64)
+	        ARCH_CFLAGS="-m64"
+		TARGET_PLATFORM_PC=unk
 		;;
+	    (i?86)
+	        ARCH_CFLAGS="-m32"
+		TARGET_PLATFORM_PC=unk
+		;;
+
 	    (*)
 	        TARGET_PLATFORM_PC=false
 		platform_pc_reason="$arch_disab_msg"
@@ -590,6 +596,9 @@ AC_ARG_WITH(platform-beaglebone,
 	    	TARGET_PLATFORM_BEAGLEBONE=true
 		platform_specified=true
 		platform_beaglebone_reason="$cmdl_enab_msg"
+		# see https://github.com/machinekit/machinekit/issues/629
+		ARCH_CFLAGS="-march=armv7-a -mtune=cortex-a8"
+		ARCH_CFLAGS="$ARCH_CFLAGS -mfloat-abi=hard -mfpu=neon -ffast-math"
 		;;
 	    (*)
 	    	TARGET_PLATFORM_BEAGLEBONE=false
@@ -696,6 +705,8 @@ AC_ARG_WITH(platform-zedboard,
 	esac
     ])
 
+AC_SUBST(ARCH_CFLAGS)
+
 if $platform_specified; then
     # Platform was explicitly specified using --with-platform-*;
     # disable anything not explicitly specified
@@ -752,6 +763,12 @@ else
 	platform_zedboard_reason="$arch_enab_msg"
     fi
 fi
+
+if test $TARGET_PLATFORM_PC = true; then
+	echo "*** TARGET_PLATFORM_PC=true ***"
+	touch ../debian/platform_pc
+fi
+
 
 # Print messages about what platforms are to be enabled or disabled
 AC_MSG_CHECKING(platform-pc)
@@ -922,7 +939,7 @@ AC_ARG_ENABLE(dev,
 # NML
 ##############################################################################
 
-PKG_CHECK_MODULES([CZMQ], [libczmq > 2.0],
+PKG_CHECK_MODULES([CZMQ], [libczmq > 4.0],
     [
         AC_DEFINE(HAVE_CZMQ, [], [zeroMQ czmq library available])
 	USE_CZMQ=yes
@@ -930,7 +947,7 @@ PKG_CHECK_MODULES([CZMQ], [libczmq > 2.0],
 
 PKG_CHECK_MODULES([PROTOBUF], [protobuf > 2.4.0],
     [
-        AC_DEFINE(HAVE_PROTOBUF, [], [zeroMQ czmq library available])
+        AC_DEFINE(HAVE_PROTOBUF, [], [protobuf available])
 	USE_PROTOBUF=yes
     ],)
 
@@ -964,6 +981,24 @@ PKG_CHECK_MODULES([LWS], libwebsockets,
         AC_DEFINE(HAVE_LWS, [], [libwebsockets library available])
 	USE_LWS=yes
    ],)
+
+AC_MSG_CHECKING(whether to build webtalk)
+AC_ARG_ENABLE([webtalk],
+    AS_HELP_STRING([--enable-webtalk="ARG"], [build Webtalk [ARG=yes] ]))
+
+    AS_IF([test "x$enable_webtalk" = "xyes"], [
+	if test "$USE_LWS" != "yes"; then
+	    AC_MSG_ERROR([Please install libwebsockets before building Webtalk.])
+	fi
+	BUILD_WEBTALK=yes
+        AC_MSG_RESULT([configuring to to build webtalk])
+    ],
+    [
+      AC_MSG_RESULT([not building webtalk])
+      BUILD_WEBTALK=no
+    ])
+
+
 
 PKG_CHECK_MODULES([SSL], libssl,
    [
@@ -1740,7 +1775,7 @@ fi
 
 AC_SUBST(BUILD_DEV)
 AC_SUBST(BUILD_PROTO_JS)
-
+AC_SUBST(BUILD_WEBTALK)
 
 AC_SUBST(BUILD_NMLDEP)
 if test "$BUILD_NMLDEP" = yes; then
@@ -2298,26 +2333,26 @@ then
     AC_MSG_ERROR([awk not found])
 fi
 
-if test -n "${rtai_kernels}${xenomai_kernels}${shmdrv_kernels}"; then
+#if test -n "${rtai_kernels}${xenomai_kernels}${shmdrv_kernels}"; then
     # Kernel module tools only needed for kthreads
-    AC_PATH_PROG(INSMOD, insmod, "none", $SPATH)
-    if test $INSMOD = "none"
-    then
-	AC_MSG_ERROR([insmod not found])
-    fi
+#    AC_PATH_PROG(INSMOD, insmod, "none", $SPATH)
+#    if test $INSMOD = "none"
+#    then
+#	AC_MSG_ERROR([insmod not found])
+#    fi
 
-    AC_PATH_PROG(RMMOD, rmmod, "none", $SPATH)
-    if test $RMMOD = "none"
-    then
-	AC_MSG_ERROR([rmmod not found])
-    fi
+#    AC_PATH_PROG(RMMOD, rmmod, "none", $SPATH)
+#    if test $RMMOD = "none"
+#    then
+#	AC_MSG_ERROR([rmmod not found])
+#    fi
 
-    AC_PATH_PROG(LSMOD, lsmod, "none", $SPATH)
-    if test $LSMOD = "none"
-    then
-	AC_MSG_ERROR([lsmod not found])
-    fi
-fi
+#    AC_PATH_PROG(LSMOD, lsmod, "none", $SPATH)
+#    if test $LSMOD = "none"
+#    then
+#	AC_MSG_ERROR([lsmod not found])
+#    fi
+#fi
 
 AC_PATH_PROG(PIDOF, pidof, "none", $SPATH)
 if test $PIDOF = "none"

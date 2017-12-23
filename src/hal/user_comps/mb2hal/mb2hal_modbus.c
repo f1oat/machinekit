@@ -18,13 +18,13 @@ static retCode map_read(mb_tx_t *this_mb_tx, uint16_t *data)
 
 		switch (m->type) {
 		case HAL_S32:
-			this_mb_tx->pin_value[counter]->s = (hal_s32_t)val * m->scale + m->offset;
+			this_mb_tx->pin_value[counter]->_s = (hal_s32_t)val * m->scale + m->offset;
 			break;
 		case HAL_U32:
-			this_mb_tx->pin_value[counter]->u = (hal_u32_t)val * m->scale + m->offset;
+			this_mb_tx->pin_value[counter]->_u = (hal_u32_t)val * m->scale + m->offset;
 			break;
 		case HAL_FLOAT:
-			this_mb_tx->pin_value[counter]->f = (hal_s32_t)val * m->scale + m->offset;
+			this_mb_tx->pin_value[counter]->_f = (hal_s32_t)val * m->scale + m->offset;
 			break;
 		default:
 			return retERR;
@@ -43,13 +43,13 @@ static retCode map_write(mb_tx_t *this_mb_tx, uint16_t *data)
 
 		switch (m->type) {
 		case HAL_S32:
-			val = this_mb_tx->pin_value[counter]->s * m->scale + m->offset;
+			val = this_mb_tx->pin_value[counter]->_s * m->scale + m->offset;
 			break;
 		case HAL_U32:
-			val = this_mb_tx->pin_value[counter]->u * m->scale + m->offset;
+			val = this_mb_tx->pin_value[counter]->_u * m->scale + m->offset;
 			break;
 		case HAL_FLOAT:
-			val = this_mb_tx->pin_value[counter]->f * m->scale + m->offset;
+			val = this_mb_tx->pin_value[counter]->_f * m->scale + m->offset;
 			break;
 		default:
 			return retERR;
@@ -104,7 +104,7 @@ retCode fnct_02_read_discrete_inputs(mb_tx_t *this_mb_tx, mb_link_t *this_mb_lin
     	for (int counter = 0; counter < this_mb_tx->nb_hal_map_pin; counter++) {
     		hal_map_pin_t *m = this_mb_tx->hal_map_pin + counter;
     		int addr = m->addr - this_mb_tx->mb_tx_1st_addr;
-			this_mb_tx->pin_value[counter]->b = bits[addr];
+			this_mb_tx->pin_value[counter]->_b = bits[addr];
 		}
     }
 
@@ -202,7 +202,7 @@ retCode fnct_04_read_input_registers(mb_tx_t *this_mb_tx, mb_link_t *this_mb_lin
 retCode fnct_05_write_single_coil(mb_tx_t *this_mb_tx, mb_link_t *this_mb_link)
 {
     char *fnct_name = "fnct_05_write_single_coil";
-    int counter, ret;
+    int ret;
     uint8_t bit;
 
     if (this_mb_tx == NULL || this_mb_link == NULL) {
@@ -216,7 +216,7 @@ retCode fnct_05_write_single_coil(mb_tx_t *this_mb_tx, mb_link_t *this_mb_link)
     	bit = *(this_mb_tx->bit[0]);
     }
     else {
-    	bit = this_mb_tx->pin_value[0]->b;
+    	bit = this_mb_tx->pin_value[0]->_b;
     }
 
     DBG(this_mb_tx->cfg_debug, "mb_tx[%d] mb_links[%d] slave[%d] fd[%d] 1st_addr[%d] nelem[%d]",
@@ -259,7 +259,7 @@ retCode fnct_15_write_multiple_coils(mb_tx_t *this_mb_tx, mb_link_t *this_mb_lin
     	for (int counter = 0; counter < this_mb_tx->nb_hal_map_pin; counter++) {
     		hal_map_pin_t *m = this_mb_tx->hal_map_pin + counter;
     		int addr = m->addr - this_mb_tx->mb_tx_1st_addr;
-    		bits[addr] = this_mb_tx->pin_value[counter]->b;
+    		bits[addr] = this_mb_tx->pin_value[counter]->_b;
 		}
     }
 
