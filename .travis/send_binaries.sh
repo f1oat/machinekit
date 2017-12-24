@@ -13,7 +13,7 @@ if [ "${TRAVIS_TEST_RESULT}" -eq 0 ] && [ ! -f ~/no_sftp ]; then
 	tar cvzf ${FILE} -C ${ROOTFS}/${MACHINEKIT_PATH}/deploy .
     else
 	echo "${ROOTFS}/${MACHINEKIT_PATH}/deploy is missing";
-	ls -alR ${ROOTFS}/${MACHINEKIT_PATH}/
+	#ls -alR ${ROOTFS}/${MACHINEKIT_PATH}/
     fi
 
 cat >sftp_cmds <<EOF
