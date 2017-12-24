@@ -94,8 +94,8 @@ script:
 after_success:
   - .travis/send_binaries.sh
   # Upload packages to packagecloud.io
-  - test -z "PACKAGECLOUD_USER" || gem install package_cloud
-  - test -z "PACKAGECLOUD_USER" || scripts/build_packagecloud_upload
+  - test -z "$PACKAGECLOUD_USER" || gem install package_cloud
+  - test -z "$PACKAGECLOUD_USER" || scripts/build_packagecloud_upload
   # Show ccache stats
   - ccache -s
 

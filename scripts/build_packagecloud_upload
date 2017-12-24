@@ -27,7 +27,7 @@ TAG=${1:-$TAG}
 exit_nice () { echo "No packagecloud upload:  $*" >&2; exit 0; }
 error () { echo "Error:  $*" >&2; exit 1; }
 
-test -n "PACKAGECLOUD_USER" || \
+test -n "$PACKAGECLOUD_USER" || \
     exit_nice "PACKAGECLOUD_USER not set"
 test "$CMD" = "deb" || \
     exit_nice "CMD '$CMD' != 'deb'"
